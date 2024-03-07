@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/gocolly/colly"
+	"github.com/k3a/html2text"
+	"github.com/securisec/go-keywords"
 )
 
 var sitemapPaths = []string{
@@ -30,35 +32,44 @@ type Url struct {
 	Loc string `xml:"loc"`
 }
 
-func fetchProductsFromUrl(url string) {
+func fetchProductsFromUrl(url string) []string {
 	c := colly.NewCollector()
+	var urls []string
 
-	c.OnResponse(processSiteMap)
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("Page visited: ", r.Request.URL)
+
+		var sitemap Sitemap
+
+		err := xml.Unmarshal(r.Body, &sitemap)
+
+		if err != nil {
+			fmt.Println("Error: %v\n", err)
+			return
+		}
+
+		for _, url := range sitemap.Urls {
+			if strings.Contains(url.Loc, "product") {
+				urls = append(urls, url.Loc)
+			}
+		}
+	})
 
 	for _, sitemapPath := range sitemapPaths {
 		c.Visit(fmt.Sprintf("%v/%v", url, sitemapPath))
 	}
+
+	return urls
 }
 
-func processSiteMap(r *colly.Response) {
-	fmt.Println("Page visited: ", r.Request.URL)
+func analyseUrl(url string) {
 	c := colly.NewCollector()
-	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Visited product page %v", r.Request.URL)
+
+	c.OnHTML("body", func(e *colly.HTMLElement) {
+		text := html2text.HTML2Text(e.Text)
+		keywords, _ := keywords.Extract(string(text))
+		fmt.Print(keywords)
 	})
 
-	var sitemap Sitemap
-
-	err := xml.Unmarshal(r.Body, &sitemap)
-
-	if err != nil {
-		fmt.Println("Error: %v\n", err)
-		return
-	}
-
-	for _, url := range sitemap.Urls {
-		if strings.Contains(url.Loc, "product") {
-			c.Visit(url.Loc)
-		}
-	}
+	c.Visit(url)
 }
