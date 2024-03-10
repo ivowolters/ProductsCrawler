@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"strings"
 
 	"github.com/gocolly/colly"
 	"github.com/k3a/html2text"
@@ -32,7 +31,7 @@ type Url struct {
 	Loc string `xml:"loc"`
 }
 
-func fetchProductsFromUrl(url string) []string {
+func fetchProductsFromUrl(url string, urlFilter func(url Url) bool) []string {
 	c := colly.NewCollector()
 	var urls []string
 
@@ -49,7 +48,7 @@ func fetchProductsFromUrl(url string) []string {
 		}
 
 		for _, url := range sitemap.Urls {
-			if strings.Contains(url.Loc, "product") {
+			if urlFilter(url) {
 				urls = append(urls, url.Loc)
 			}
 		}
