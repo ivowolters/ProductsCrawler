@@ -7,7 +7,7 @@ import (
 
 func main() {
 	fmt.Println("Hello, World!")
-	urls := fetchProductsFromUrl(
+	urls := fetchUrlsFromDomainname(
 		"https://www.exact.com/",
 		func(url Url) bool { return strings.Contains(url.Loc, "product") },
 	)

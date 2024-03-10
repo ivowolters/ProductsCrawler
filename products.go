@@ -31,7 +31,7 @@ type Url struct {
 	Loc string `xml:"loc"`
 }
 
-func fetchProductsFromUrl(url string, urlFilter func(url Url) bool) []string {
+func fetchUrlsFromDomainname(url string, filter func(url Url) bool) []string {
 	c := colly.NewCollector()
 	var urls []string
 
@@ -48,7 +48,7 @@ func fetchProductsFromUrl(url string, urlFilter func(url Url) bool) []string {
 		}
 
 		for _, url := range sitemap.Urls {
-			if urlFilter(url) {
+			if filter(url) {
 				urls = append(urls, url.Loc)
 			}
 		}
