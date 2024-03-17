@@ -13,6 +13,8 @@ func main() {
 	)
 	for _, url := range urls {
 		fmt.Println(url)
-		analyseUrl(url)
+		result := analyseUrl(url)
+
+		fmt.Println(result)
 	}
 }

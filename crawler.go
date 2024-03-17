@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"strings"
 
 	"github.com/gocolly/colly"
-	"github.com/k3a/html2text"
 	"github.com/securisec/go-keywords"
 )
 
@@ -31,7 +31,12 @@ type Url struct {
 	Loc string `xml:"loc"`
 }
 
-func fetchUrlsFromDomainname(url string, filter func(url Url) bool) []string {
+type AnalyseUrlResponse struct {
+	Title    string
+	Keywords []string
+}
+
+func fetchUrlsFromDomainname(domainName string, filter func(url Url) bool) []string {
 	c := colly.NewCollector()
 	var urls []string
 
@@ -55,20 +60,38 @@ func fetchUrlsFromDomainname(url string, filter func(url Url) bool) []string {
 	})
 
 	for _, sitemapPath := range sitemapPaths {
-		c.Visit(fmt.Sprintf("%v/%v", url, sitemapPath))
+		c.Visit(fmt.Sprintf("%v/%v", domainName, sitemapPath))
 	}
 
 	return urls
 }
 
-func analyseUrl(url string) {
+func analyseUrl(url string) AnalyseUrlResponse {
 	c := colly.NewCollector()
+	var textSb strings.Builder
+	var titleSb strings.Builder
 
 	c.OnHTML("body", func(e *colly.HTMLElement) {
-		text := html2text.HTML2Text(e.Text)
-		keywords, _ := keywords.Extract(string(text))
-		fmt.Print(keywords)
+		contentTags := []string{"h1", "h2", "h3", "p"}
+
+		for _, tag := range contentTags {
+			e.ForEach(tag, func(i int, h *colly.HTMLElement) {
+				textSb.WriteString(fmt.Sprintf("%v ", h.Text))
+			})
+		}
+
+		e.ForEach("h1", func(i int, h *colly.HTMLElement) {
+			titleSb.WriteString(fmt.Sprintf("%v ", h.Text))
+		})
 	})
 
 	c.Visit(url)
+
+	text := strings.Trim(textSb.String(), " ")
+	keywords, _ := keywords.Extract(string(text))
+
+	return AnalyseUrlResponse{
+		Title:    titleSb.String(),
+		Keywords: keywords,
+	}
 }
