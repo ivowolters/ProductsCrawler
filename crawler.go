@@ -91,7 +91,7 @@ func analyseUrl(url string) AnalyseUrlResponse {
 	keywords, _ := keywords.Extract(string(text))
 
 	return AnalyseUrlResponse{
-		Title:    titleSb.String(),
+		Title:    strings.Trim(titleSb.String(), " "),
 		Keywords: keywords,
 	}
 }

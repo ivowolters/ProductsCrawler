@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"productcrawler/db"
 	"strings"
 )
 
@@ -14,6 +15,17 @@ func main() {
 	for _, url := range urls {
 		fmt.Println(url)
 		result := analyseUrl(url)
+
+		if result.Title == "" {
+			fmt.Print("Empty body")
+			continue
+		}
+
+		db.SaveProduct(db.ProductDto{
+			Url:      url,
+			Title:    result.Title,
+			Keywords: result.Keywords,
+		})
 
 		fmt.Println(result)
 	}
