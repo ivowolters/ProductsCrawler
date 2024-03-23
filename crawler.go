@@ -87,11 +87,11 @@ func analyseUrl(url string) AnalyseUrlResponse {
 
 	c.Visit(url)
 
-	text := strings.Trim(textSb.String(), " ")
+	text := strings.TrimSpace(textSb.String())
 	keywords, _ := keywords.Extract(string(text))
 
 	return AnalyseUrlResponse{
-		Title:    strings.Trim(titleSb.String(), " "),
+		Title:    strings.TrimSpace(titleSb.String()),
 		Keywords: keywords,
 	}
 }
